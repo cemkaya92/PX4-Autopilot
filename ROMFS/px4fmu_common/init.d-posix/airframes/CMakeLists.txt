@@ -94,6 +94,7 @@ px4_add_romfs_files(
 	4021_gz_x500_flow
 	
 	4101_gz_crazyflie
+	4102_gz_f450
 
 	6011_gazebo-classic_typhoon_h480
 	6011_gazebo-classic_typhoon_h480.post
