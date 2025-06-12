@@ -510,3 +510,11 @@ add_custom_target(install_python_requirements
 if(EXISTS "${PX4_SOURCE_DIR}/platforms/${PX4_PLATFORM}/cmake/finalize.cmake")
 	include(finalize)
 endif()
+
+# build custom gz plugins 
+add_custom_target(build_gz_plugins ALL
+    COMMAND ${CMAKE_COMMAND} -S ${CMAKE_SOURCE_DIR}/Tools/simulation/gz/plugins -B ${CMAKE_SOURCE_DIR}/Tools/simulation/gz/plugins/build
+    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_SOURCE_DIR}/Tools/simulation/gz/plugins/build
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/Tools/simulation/gz/plugins
+    COMMENT "Building custom Gz plugins"
+)
