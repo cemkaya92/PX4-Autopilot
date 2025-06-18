@@ -16,6 +16,10 @@ param set-default SIM_GZ_EN 1
 param set-default CA_AIRFRAME 0
 param set-default CA_ROTOR_COUNT 4
 
+param set-default FD_ACT_EN 0
+param set-default FD_ACT_MOT_TOUT 500
+param set-default FD_ESCS_EN 0
+
 param set-default CA_ROTOR0_PX 0.0325
 param set-default CA_ROTOR0_PY -0.0325
 param set-default CA_ROTOR0_KM  0.05
@@ -37,10 +41,10 @@ param set-default SIM_GZ_EC_FUNC2 102
 param set-default SIM_GZ_EC_FUNC3 103
 param set-default SIM_GZ_EC_FUNC4 104
 
-param set-default SIM_GZ_EC_MIN1 150
-param set-default SIM_GZ_EC_MIN2 150
-param set-default SIM_GZ_EC_MIN3 150
-param set-default SIM_GZ_EC_MIN4 150
+param set-default SIM_GZ_EC_MIN1 0
+param set-default SIM_GZ_EC_MIN2 0
+param set-default SIM_GZ_EC_MIN3 0
+param set-default SIM_GZ_EC_MIN4 0
 
 param set-default SIM_GZ_EC_MAX1 1000
 param set-default SIM_GZ_EC_MAX2 1000
