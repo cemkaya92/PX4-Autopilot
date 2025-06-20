@@ -118,9 +118,26 @@ if [ -n "${PX4_SIM_MODEL#*gz_}" ] && [ -z "${PX4_GZ_MODEL_NAME}" ]; then
 		pos_x=${pos_x:-0}
 		pos_y=${pos_y:-0}
 		pos_z=${pos_z:-0}
+		roll=$(echo "${PX4_GZ_MODEL_POSE}" | awk -F',' '{print $4}')
+		pitch=$(echo "${PX4_GZ_MODEL_POSE}" | awk -F',' '{print $5}')
+		yaw=$(echo "${PX4_GZ_MODEL_POSE}" | awk -F',' '{print $6}')
+		roll=${roll:-0}
+		pitch=${pitch:-0}
+		yaw=${yaw:-0}
 
-		POSE_ARG=", pose: { position: { x: ${pos_x}, y: ${pos_y}, z: ${pos_z} } }"
-		echo "INFO  [init] Spawning model at position: ${pos_x} ${pos_y} ${pos_z}"
+		# Convert roll, pitch, yaw to quaternion
+		# Convert RPY to quaternion using single-line Python and echo-safe output
+		quat_output=$(python3 -c "import math; cr=math.cos(${roll}/2); sr=math.sin(${roll}/2); cp=math.cos(${pitch}/2); sp=math.sin(${pitch}/2); cy=math.cos(${yaw}/2); sy=math.sin(${yaw}/2); qw=cr*cp*cy + sr*sp*sy; qx=sr*cp*cy - cr*sp*sy; qy=cr*sp*cy + sr*cp*sy; qz=cr*cp*sy - sr*sp*cy; print(f'{qx} {qy} {qz} {qw}')")
+
+
+		# Extract values manually (no "set --")
+		quat_x=$(echo "$quat_output" | awk '{print $1}')
+		quat_y=$(echo "$quat_output" | awk '{print $2}')
+		quat_z=$(echo "$quat_output" | awk '{print $3}')
+		quat_w=$(echo "$quat_output" | awk '{print $4}')
+
+		POSE_ARG=", pose: { position: { x: ${pos_x}, y: ${pos_y}, z: ${pos_z} }, orientation: { x: ${quat_x}, y: ${quat_y}, z: ${quat_z}, w: ${quat_w} } }"
+		echo "INFO  [init] Spawning model at position: ${pos_x} ${pos_y} ${pos_z} ${roll} ${pitch} ${yaw}"
 	fi
 
 	echo "INFO  [init] Spawning model"
