@@ -41,6 +41,8 @@
 
 #include "ControlAllocationPseudoInverse.hpp"
 
+#include <px4_platform_common/module.h>
+
 void
 ControlAllocationPseudoInverse::setEffectivenessMatrix(
 	const matrix::Matrix<float, ControlAllocation::NUM_AXES, ControlAllocation::NUM_ACTUATORS> &effectiveness,
@@ -116,6 +118,7 @@ ControlAllocationPseudoInverse::updateControlAllocationMatrixScale()
 		_control_allocation_scale(2) = _mix.col(2).max();
 
 	} else {
+
 		_control_allocation_scale(0) = 1.f;
 		_control_allocation_scale(1) = 1.f;
 		_control_allocation_scale(2) = 1.f;
@@ -145,6 +148,7 @@ ControlAllocationPseudoInverse::updateControlAllocationMatrixScale()
 			_control_allocation_scale(3 + axis_idx) = _control_allocation_scale(THRUST_Z);
 		}
 	}
+
 }
 
 void

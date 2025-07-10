@@ -95,6 +95,7 @@ px4_add_romfs_files(
 	
 	4101_gz_crazyflie
 	4102_gz_f450
+	4103_gz_f450_mono_cam
 
 	4201_gz_asl_rover
 
