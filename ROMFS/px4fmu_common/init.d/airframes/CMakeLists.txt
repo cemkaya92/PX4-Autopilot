@@ -56,6 +56,7 @@ if(CONFIG_MODULES_MC_RATE_CONTROL)
 	px4_add_romfs_files(
 		# [4000, 4999] Quadrotor x
 		4001_quad_x
+		4013_f450
 		4014_s500
 		4015_holybro_s500
 		4016_holybro_px4vision
@@ -140,6 +141,7 @@ if(CONFIG_MODULES_ROVER_DIFFERENTIAL)
 		# [50000, 50999] Differential rovers
 		50000_generic_rover_differential
 		50001_aion_robotics_r1_rover
+		50002_asl_rover
 	)
 endif()
 
