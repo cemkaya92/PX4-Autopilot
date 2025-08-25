@@ -6,7 +6,40 @@ serial_config:
         else
             set UXRCE_DDS_ARGS "-t udp"
         fi
-        uxrce_dds_client start ${UXRCE_DDS_ARGS}
+        
+        # --- DEBUG (optional) ---
+        echo "[uxrce] SERIAL_DEV='${SERIAL_DEV}' BAUD_PARAM='${BAUD_PARAM}'"
+        param show UXRCE_DDS_NS
+        echo "[uxrce] UXRCE_DDS_ARGS='${UXRCE_DDS_ARGS}'"
+
+        # --- Start with namespace (branch per value) ---
+        if param compare UXRCE_DDS_NS 1; then
+            echo "[uxrce] ns=drone1"
+            uxrce_dds_client start ${UXRCE_DDS_ARGS} -n drone1
+            exit 0
+        fi
+        if param compare UXRCE_DDS_NS 2; then
+            echo "[uxrce] ns=drone2"
+            uxrce_dds_client start ${UXRCE_DDS_ARGS} -n drone2
+            exit 0
+        fi
+        if param compare UXRCE_DDS_NS 3; then
+            echo "[uxrce] ns=rover1"
+            uxrce_dds_client start ${UXRCE_DDS_ARGS} -n rover1
+            exit 0
+        fi
+        if param compare UXRCE_DDS_NS 4; then
+            echo "[uxrce] ns=rover2"
+            uxrce_dds_client start ${UXRCE_DDS_ARGS} -n rover2
+            exit 0
+        fi
+        if param compare UXRCE_DDS_NS 0; then
+            echo "[uxrce] ns=none"
+            uxrce_dds_client start ${UXRCE_DDS_ARGS}
+            exit 0
+        fi
+
+
 
       port_config_param:
         name: UXRCE_DDS_CFG
@@ -129,3 +162,22 @@ parameters:
             reboot_required: true
             default: -1
             unit: s
+
+        UXRCE_DDS_NS:
+            description:
+                short: uXRCE-DDS ROS 2 namespace
+                long: |
+                    Sets the ROS 2 namespace for topics/services created by uxrce_dds_client
+                    (maps to `-n <namespace>`). Set to "none" for no namespace.
+            category: System
+            reboot_required: true
+            type: enum
+            values:
+                0: none
+                1: drone1
+                2: drone2
+                3: rover1
+                4: rover2
+            min: 0
+            max: 4
+            default: 0
