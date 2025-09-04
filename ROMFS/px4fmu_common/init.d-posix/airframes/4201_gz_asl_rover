@@ -56,4 +56,8 @@ param set-default SIM_GZ_WH_MIN2 70
 param set-default SIM_GZ_WH_MAX2 130
 param set-default SIM_GZ_WH_DIS2 100
 
-param set-default SIM_GZ_WH_REV 1 # reverse right wheel
+param set-default SIM_GZ_WH_REV 0 
+
+param set-default UXRCE_DDS_NS 0
+
+s

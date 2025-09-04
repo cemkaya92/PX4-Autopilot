@@ -28,3 +28,5 @@ param set-default CA_ROTOR3_PY -0.159
 param set-default CA_ROTOR3_KM 0.05
 
 param set-default MPC_THR_HOVER 0.60
+
+param set-default UXRCE_DDS_NS 2
