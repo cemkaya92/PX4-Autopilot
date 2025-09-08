@@ -1,0 +1,32 @@
+#!/bin/sh
+#
+# @name DJI F450 with MonoCam
+#
+# @type Quadrotor x
+# @class Copter
+#
+
+. ${R}etc/init.d/rc.mc_defaults
+
+param set-default CA_AIRFRAME 0
+param set-default CA_ROTOR_COUNT 4
+
+param set-default CA_ROTOR0_PX 0.159
+param set-default CA_ROTOR0_PY -0.159
+param set-default CA_ROTOR0_KM  -0.05
+
+param set-default CA_ROTOR1_PX  0.159
+param set-default CA_ROTOR1_PY  0.159
+param set-default CA_ROTOR1_KM  0.05
+
+param set-default CA_ROTOR2_PX -0.159
+param set-default CA_ROTOR2_PY  0.159
+param set-default CA_ROTOR2_KM  -0.05
+
+param set-default CA_ROTOR3_PX -0.159
+param set-default CA_ROTOR3_PY -0.159
+param set-default CA_ROTOR3_KM 0.05
+
+param set-default MPC_THR_HOVER 0.60
+
+param set-default UXRCE_DDS_NS 2
