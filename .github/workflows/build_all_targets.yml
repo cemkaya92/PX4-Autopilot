@@ -18,13 +18,16 @@ on:
       - 'docs/**'
   pull_request:
     branches:
-      - '*'
+      - '**'
     paths-ignore:
       - 'docs/**'
+<<<<<<< HEAD
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+=======
+>>>>>>> 6ea3539157
 
 jobs:
   group_targets:

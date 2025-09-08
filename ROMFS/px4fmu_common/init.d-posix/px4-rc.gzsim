@@ -1,21 +1,21 @@
 #!/bin/sh
 # shellcheck disable=SC2154
 
+echo "INFO  [init] Gazebo simulator"
+
 # Enforce minimum gz version as Harmonic (gz-sim8)
 MIN_GZ_VERSION="8.0.0"
 GZ_SIM_VERSION=$(gz sim --versions 2>/dev/null | head -n 1 | tr -d ' ')
 
 if [ -z "$GZ_SIM_VERSION" ]; then
-	echo "ERROR [init] Gazebo gz sim not found. Please install gz-harmonic"
-	exit 1
+    echo "ERROR [init] Gazebo gz sim not found. Please install gz-harmonic"
+    exit 1
 fi
 
 # Use sort compare, check that MIN_GZ_VERSION is ordered last
 if [ "$(printf '%s\n' "$GZ_SIM_VERSION" "$MIN_GZ_VERSION" | sort -V | head -n1)" = "$MIN_GZ_VERSION" ]; then
 	gz_command="gz"
 	gz_sub_command="sim"
-
-	echo "INFO  [init] Gazebo simulator $GZ_SIM_VERSION"
 
 	# Specify render engine if `GZ_SIM_RENDER_ENGINE` is set
 	# (for example, if you want to use Ogre 1.x instead of Ogre 2.x):
@@ -24,15 +24,19 @@ if [ "$(printf '%s\n' "$GZ_SIM_VERSION" "$MIN_GZ_VERSION" | sort -V | head -n1)"
 		gz_sub_command="${gz_sub_command} --render-engine ${PX4_GZ_SIM_RENDER_ENGINE}"
 	fi
 else
-	echo "ERROR [init] Gazebo version too hold ($GZ_SIM_VERSION). Minimum required version is $MIN_GZ_VERSION"
-	exit 1
+    echo "ERROR [init] Gazebo gz sim version is too old ($GZ_SIM_VERSION). Minimum required version is $MIN_GZ_VERSION"
+    exit 1
 fi
 
-# If not standalone launch the world
+# Look for an already running world
+get_gz_world() {
+	gz_world=$( ${gz_command} topic -l | grep -m 1 -e "^/world/.*/clock" | sed 's/\/world\///g; s/\/clock//g' )
+}
+
+# If not standalone
 if [ -z "${PX4_GZ_STANDALONE}" ]; then
 
-	# Look for an already running world
-	gz_world=$( ${gz_command} topic -l | grep -m 1 -e "^/world/.*/clock" | sed 's/\/world\///g; s/\/clock//g' )
+	get_gz_world
 
 	# shellcheck disable=SC2153
 	if [ -z "${gz_world}" ] && [ -n "${PX4_GZ_WORLD}" ]; then
@@ -66,6 +70,13 @@ fi
 
 # Wait for Gazebo world to be ready before proceeding
 check_scene_info() {
+
+	get_gz_world
+
+	if [ -n "${PX4_GZ_STANDALONE}" ] && [ -n "${gz_world}" ]; then
+		PX4_GZ_WORLD=${gz_world}
+	fi
+
 	SERVICE_INFO=$(${gz_command} service -i --service "/world/${PX4_GZ_WORLD}/scene/info" 2>&1)
 	if echo "$SERVICE_INFO" | grep -q "Service providers"; then
 		return 0
@@ -89,21 +100,6 @@ while [ $ATTEMPTS -gt 0 ]; do
 	sleep 1
 done
 
-# World is ready, check if custom location is provided
-if [ -n "${PX4_HOME_LAT}" ] || [ -n "${PX4_HOME_LON}" ] || [ -n "${PX4_HOME_ALT}" ]; then
-	# must have all three
-	if [ -z "${PX4_HOME_LAT}" ] || [ -z "${PX4_HOME_LON}" ] || [ -z "${PX4_HOME_ALT}" ]; then
-		echo "ERROR [init] PX4_HOME_LAT, PX4_HOME_LON and PX4_HOME_ALT must all be set"
-		exit 1
-	fi
-	echo "INFO  [init] Setting world origin to lat: ${PX4_HOME_LAT}, lon: ${PX4_HOME_LON}, alt: ${PX4_HOME_ALT}"
-	${gz_command} service -s "/world/${PX4_GZ_WORLD}/set_spherical_coordinates" \
-		--reqtype gz.msgs.SphericalCoordinates \
-		--reptype gz.msgs.Boolean \
-		--timeout 1000 \
-		--req "surface_model: EARTH_WGS84, latitude_deg: ${PX4_HOME_LAT}, longitude_deg: ${PX4_HOME_LON}, elevation: ${PX4_HOME_ALT}" > /dev/null 2>&1
-fi
-
 # Start gz_bridge - either spawn a model or connect to existing one
 if [ -n "${PX4_SIM_MODEL#*gz_}" ] && [ -z "${PX4_GZ_MODEL_NAME}" ]; then
 	# Spawn a model
@@ -118,26 +114,9 @@ if [ -n "${PX4_SIM_MODEL#*gz_}" ] && [ -z "${PX4_GZ_MODEL_NAME}" ]; then
 		pos_x=${pos_x:-0}
 		pos_y=${pos_y:-0}
 		pos_z=${pos_z:-0}
-		roll=$(echo "${PX4_GZ_MODEL_POSE}" | awk -F',' '{print $4}')
-		pitch=$(echo "${PX4_GZ_MODEL_POSE}" | awk -F',' '{print $5}')
-		yaw=$(echo "${PX4_GZ_MODEL_POSE}" | awk -F',' '{print $6}')
-		roll=${roll:-0}
-		pitch=${pitch:-0}
-		yaw=${yaw:-0}
 
-		# Convert roll, pitch, yaw to quaternion
-		# Convert RPY to quaternion using single-line Python and echo-safe output
-		quat_output=$(python3 -c "import math; cr=math.cos(${roll}/2); sr=math.sin(${roll}/2); cp=math.cos(${pitch}/2); sp=math.sin(${pitch}/2); cy=math.cos(${yaw}/2); sy=math.sin(${yaw}/2); qw=cr*cp*cy + sr*sp*sy; qx=sr*cp*cy - cr*sp*sy; qy=cr*sp*cy + sr*cp*sy; qz=cr*cp*sy - sr*sp*cy; print(f'{qx} {qy} {qz} {qw}')")
-
-
-		# Extract values manually (no "set --")
-		quat_x=$(echo "$quat_output" | awk '{print $1}')
-		quat_y=$(echo "$quat_output" | awk '{print $2}')
-		quat_z=$(echo "$quat_output" | awk '{print $3}')
-		quat_w=$(echo "$quat_output" | awk '{print $4}')
-
-		POSE_ARG=", pose: { position: { x: ${pos_x}, y: ${pos_y}, z: ${pos_z} }, orientation: { x: ${quat_x}, y: ${quat_y}, z: ${quat_z}, w: ${quat_w} } }"
-		echo "INFO  [init] Spawning model at position: ${pos_x} ${pos_y} ${pos_z} ${roll} ${pitch} ${yaw}"
+		POSE_ARG=", pose: { position: { x: ${pos_x}, y: ${pos_y}, z: ${pos_z} } }"
+		echo "INFO  [init] Spawning model at position: ${pos_x} ${pos_y} ${pos_z}"
 	fi
 
 	echo "INFO  [init] Spawning model"
